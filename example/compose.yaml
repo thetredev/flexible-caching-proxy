@@ -1,0 +1,26 @@
+volumes:
+  # optionally adjust config for NFS and so on
+  upstream-cache:
+
+
+services:
+  proxy:
+    image: nginx:mainline-alpine # optionally change the tag
+    env_file:
+      - .env
+    environment:
+      ALLOWED_ORIGIN: $UPSTREAM
+    ports:
+      - 8000:80/tcp # optionally change the exposed port (left side of colon)
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./container:/opt/flexible-caching-proxy
+      - upstream-cache:/cache
+    # our own entrypoint shall be the primary entrypoint:
+    entrypoint: /opt/flexible-caching-proxy/entrypoint.sh
+    # after completion, our own entrypoint shall be replaced by the container's original one:
+    command:
+      - /docker-entrypoint.sh
+      - nginx
+      - -g
+      - daemon off;
